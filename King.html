@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raja, Mantri, Chor, Sipahi Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background-color: #1e1e2e;
+            color: white;
+        }
+        .container {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #282a36;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+        button {
+            background: #ff9800;
+            border: none;
+            padding: 12px 24px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #e68900;
+            transform: scale(1.05);
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 6px;
+        }
+        .role {
+            padding: 10px;
+            margin: 5px;
+            font-weight: bold;
+            border-radius: 6px;
+        }
+        .raja { background: gold; color: black; }
+        .mantri { background: royalblue; }
+        .sipahi { background: green; }
+        .chor { background: red; }
+        .correct { color: lightgreen; font-weight: bold; }
+        .wrong { color: lightcoral; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Raja, Mantri, Chor, Sipahi</h1>
+        <label>Enter Number of Rounds: <input type="number" id="rounds" min="1"></label>
+        <button onclick="startGame()">Start Game</button>
+        <div id="gameArea"></div>
+        <div id="scoreBoard"></div>
+    </div>
+
+    <script>
+        let roles = [1000, 500, 300, 0];
+        let scores = [0, 0, 0, 0];
+        let currentRound = 0, totalRounds = 0;
+
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        function getRoleName(points) {
+            return points === 1000 ? "Raja" : points === 500 ? "Mantri" : points === 300 ? "Sipahi" : "Chor";
+        }
+
+        function getRoleClass(points) {
+            return points === 1000 ? "raja" : points === 500 ? "mantri" : points === 300 ? "sipahi" : "chor";
+        }
+
+        function startGame() {
+            totalRounds = parseInt(document.getElementById('rounds').value);
+            if (totalRounds < 1) {
+                alert("Please enter a valid number of rounds!");
+                return;
+            }
+            currentRound = 0;
+            scores = [0, 0, 0, 0];
+            nextRound();
+        }
+
+        function nextRound() {
+            if (currentRound >= totalRounds) {
+                document.getElementById('gameArea').innerHTML = `<h2>Game Over!</h2>`;
+                return;
+            }
+            currentRound++;
+            shuffle(roles);
+            let players = [...roles];
+            let rajaAt = players.indexOf(1000);
+            let mantriAt = players.indexOf(500);
+            let chorAt = players.indexOf(0);
+            
+            document.getElementById('gameArea').innerHTML = `
+                <h2>Round ${currentRound}</h2>
+                <p class="role ${getRoleClass(1000)}">Player ${rajaAt + 1} is Raja.</p>
+                <p class="role ${getRoleClass(500)}">Player ${mantriAt + 1} is Mantri.</p>
+                <p>Raja commands Mantri: "Mantri, tell me who is Chor?"</p>
+                <label>Mantri's Guess: <input type="number" id="guess" min="1" max="4"></label>
+                <button onclick="checkGuess(${mantriAt}, ${chorAt}, ${JSON.stringify(players)})">Submit Guess</button>
+            `;
+        }
+
+        function checkGuess(mantriAt, chorAt, players) {
+            let guess = parseInt(document.getElementById('guess').value);
+            if (isNaN(guess) || guess < 1 || guess > 4) {
+                alert("Enter a valid player number (1-4)!");
+                return;
+            }
+            let result = "";
+            let resultClass = "";
+            if (guess - 1 === chorAt) {
+                result = "Correct! Mantri found the Chor.";
+                resultClass = "correct";
+            } else {
+                result = `Wrong! The real Chor was Player ${chorAt + 1}. Mantri and Chor swap points!`;
+                resultClass = "wrong";
+                [players[mantriAt], players[chorAt]] = [players[chorAt], players[mantriAt]];
+            }
+            
+            for (let i = 0; i < 4; i++) scores[i] += players[i];
+            
+            document.getElementById('gameArea').innerHTML = `
+                <h2>Round ${currentRound} Results</h2>
+                <p class="${resultClass}">${result}</p>
+                <p>Final Roles:</p>
+                ${players.map((points, i) => `<p class="role ${getRoleClass(points)}">Player ${i + 1}: ${getRoleName(points)}</p>`).join('')}
+                <button onclick="nextRound()">Next Round</button>
+            `;
+            updateScoreBoard();
+        }
+
+        function updateScoreBoard() {
+            document.getElementById('scoreBoard').innerHTML = `
+                <h2>Scores</h2>
+                ${scores.map((score, i) => `<p>Player ${i + 1}: ${score}</p>`).join('')}
+            `;
+        }
+    </script>
+</body>
+</html>
+
